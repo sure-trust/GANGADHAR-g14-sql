@@ -1,0 +1,108 @@
+
+
+Day Name = FORMAT('Date Table'[Date], "DDD")
+
+Day Number = FORMAT('Date Table'[Date], "D")
+
+Month = FORMAT('Date Table'[Date], "mmm")
+
+Month Number = MONTH('Date Table'[Date])
+
+Month Year = Format('Date Table'[Date],"mmm yyyy")
+
+Week Day Number = WEEKDAY('Date Table'[Date],2)
+
+Week Number = WEEKNUM('Date Table'[Date],2)
+
+
+Weekday / Weekend = IF('Date Table'[Day Name] = "Sat" || 'Date Table'[Day Name] = "Sun", "Weekend", "Weekday")
+
+CM Orders = VAR selected_month = SELECTEDVALUE('Date Table'[Month]) 
+             RETURN
+             TOTALMTD(CALCULATE([Total Orders], 'Date Table'[Month] = selected_month), 'Date Table'[Date]) 
+
+
+
+
+CM Quantity = VAR selected_month = SELECTEDVALUE('Date Table'[Month]) 
+             RETURN
+             TOTALMTD(CALCULATE([Total Quantity Sold], 'Date Table'[Month] = selected_month), 'Date Table'[Date]) 
+
+
+CM Sales = VAR selected_month = SELECTEDVALUE('Date Table'[Month]) 
+             RETURN
+             TOTALMTD(CALCULATE([Total Sales], 'Date Table'[Month] = selected_month), 'Date Table'[Date])
+
+
+Color for Bars = IF([Total Sales]>[Daily Avg Sales], "Above Average","Below Average")
+
+
+Daily Avg Sales = AVERAGEX(ALLSELECTED(Transactions[transaction_date]), [Total Sales])
+
+Hour = HOUR(Transactions[transaction_time])
+
+Label for Product Category = SELECTEDVALUE(Transactions[product_category]) & " | " & FORMAT([Total Sales]/1000,"$0.00K")
+
+Label for Product Type = SELECTEDVALUE(Transactions[product_type]) & " | " & FORMAT([Total Sales]/1000,"$0.00K")
+
+Label for Store Location = SELECTEDVALUE(Transactions[store_location]) & " | " & FORMAT([Total Sales]/1000,"$0.00K")
+
+
+MoM Growth & Diff Orders = 
+
+    VAR month_diff = [CM Orders] - [PM Orders]
+    VAR mom = ([CM Orders] - [PM Orders]) / [PM Orders]
+    VAR _sign = IF(month_diff > 0, "+", "")
+    Var _sign_trend = IF(month_diff > 0,"▲", "▼")
+    RETURN
+    _sign_trend & " " & _sign & FORMAT(mom, "#0.0%" & " | " &  _sign & FORMAT(month_diff/1000, "0.0k")) & " " & "VS LM"
+
+
+
+MoM Growth & Diff Quantity = 
+
+    VAR month_diff = [CM Quantity] - [PM Quantity]
+    VAR mom = ([CM Quantity] - [PM Quantity]) / [PM Quantity]
+    VAR _sign = IF(month_diff > 0, "+", "")
+    VAR _sign_trend = IF(month_diff > 0,"▲", "▼")
+    RETURN
+    _sign_trend & " " & _sign & FORMAT(mom, "#0.0%" & " | " &  _sign & FORMAT(month_diff/1000, "0.0k")) & " " & "VS LM"
+
+
+
+
+MoM Growth & Diff Sales = 
+
+    VAR month_diff = [CM Sales] - [PM Sales]
+    VAR mom = ([CM Sales] - [PM Sales]) / [PM Sales]
+    VAR _sign = IF(month_diff > 0, "+", "")
+    Var _sign_trend = IF(month_diff > 0,"▲", "▼")
+    RETURN
+    _sign_trend & " " & _sign & FORMAT(mom, "#0.0%" & " | " &  _sign & FORMAT(month_diff/1000, "0.0k")) & " " & "VS LM"
+
+New MoM Label = 
+
+    VAR month_diff = [CM Sales] - [PM Sales]
+    VAR mom = ([CM Sales] - [PM Sales]) / [PM Sales]
+    VAR _sign = IF(month_diff > 0, "+", "")
+    Var _sign_trend = IF(month_diff > 0,"▲", "▼")
+    RETURN
+    _sign_trend & " " & _sign & FORMAT(mom, "#0.0%" )
+
+Placeholder = 0 
+
+PM Orders = CALCULATE([CM Orders] , DATEADD('Date Table'[Date], -1,MONTH))
+
+PM Quantity = CALCULATE([CM Quantity] , DATEADD('Date Table'[Date], -1,MONTH))
+
+PM Sales = CALCULATE([CM Sales] , DATEADD('Date Table'[Date], -1,MONTH))
+
+Sales = Transactions[unit_price] * Transactions[transaction_qty]
+
+Total Orders = DISTINCTCOUNT(Transactions[transaction_id])
+
+Total Quantity Sold = SUM(Transactions[transaction_qty])
+
+Total Sales = SUM(Transactions[Sales])
+
+TT For Hour = "Hour NO:" & " " & FORMAT(AVERAGE(Transactions[Hour]), 0)
